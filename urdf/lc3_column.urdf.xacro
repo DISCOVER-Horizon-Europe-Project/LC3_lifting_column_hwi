@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="lc3_column">
+
+    <xacro:arg name="use_mock_hardware" default="false"/>
+    <xacro:arg name="simulation" default="false"/>
+
+    <!-- Base link (fixed to world) -->
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <box size="0.3 0.3 0.6"/>
+            </geometry>
+            <origin xyz="0 0 0.3" rpy="0 0 0"/>
+            <material name="gray">
+                <color rgba="0.5 0.5 0.5 1"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.3 0.3 0.6"/>
+            </geometry>
+            <origin xyz="0 0 0.3" rpy="0 0 0"/>
+        </collision>
+        <inertial>
+            <mass value="5.0"/>
+            <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.05"/>
+        </inertial>
+    </link>
+
+    <!-- Column link (moving part) -->
+    <link name="column_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.05" length="0.5"/>
+            </geometry>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+            <material name="silver">
+                <color rgba="0.75 0.75 0.75 1"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.05" length="0.5"/>
+            </geometry>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        </collision>
+        <inertial>
+            <mass value="2.0"/>
+            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+            <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.001"/>
+        </inertial>
+    </link>
+
+    <!-- Prismatic joint for column -->
+    <joint name="column_joint" type="prismatic">
+        <origin xyz="0 0 0.05" rpy="0 0 0"/>
+        <parent link="base_link"/>
+        <child link="column_link"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="0.0" upper="0.9" effort="1000.0" velocity="0.1"/>
+        <dynamics damping="10.0" friction="1.0"/>
+    </joint>
+
+    <!-- ros2_control hardware interface -->
+    <ros2_control name="lc3_column_controller" type="system">
+        <xacro:unless value="$(arg simulation)">
+            <xacro:unless value="$(arg use_mock_hardware)">
+                <hardware>
+                    <plugin>lc3_hw_interface/LC3HardwareInterface</plugin>
+                    <param name="column_name">column_joint</param>
+                </hardware>
+            </xacro:unless>
+            <xacro:if value="$(arg use_mock_hardware)">
+                <hardware>
+                    <plugin>mock_components/GenericSystem</plugin>
+                    <param name="calculate_dynamics">true</param>
+                </hardware>
+            </xacro:if>
+        </xacro:unless>
+
+        <xacro:if value="$(arg simulation)">
+            <hardware>
+                <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+            </hardware>
+        </xacro:if>
+
+        <joint name="column_joint">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
+
+</robot>

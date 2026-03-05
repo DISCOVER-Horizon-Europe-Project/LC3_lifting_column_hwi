@@ -1,0 +1,9 @@
+<library path="lc3_hw_interface">
+  <class name="lc3_hw_interface/LC3HardwareInterface"
+         type="lc3_hw_interface::LC3HardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ROS2 hardware interface for LC3 lifting column using Modbus TCP.
+    </description>
+  </class>
+</library>
