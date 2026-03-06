@@ -34,7 +34,7 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "lc3_hw_interface/visibility_control.h"
 
-#include "wheel.hpp"
+#include "actuator.hpp"
 
 
 namespace lc3_hw_interface
@@ -90,7 +90,7 @@ namespace lc3_hw_interface
 
   private:
     Config cfg_;
-    Wheel column_;
+    Actuator column_;
     
     // Modbus registers
     static constexpr uint16_t REG_STATUS = 0x2001;

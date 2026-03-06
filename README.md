@@ -11,8 +11,6 @@ This package provides a ros2_control hardware interface for controlling LC3 line
 - Full ros2_control SystemInterface implementation
 - Modbus TCP communication
 - Position and velocity feedback
-- Heartbeat mechanism for safe operation
-- Send-only-on-change optimization
 - Automatic retraction on shutdown
 - Standalone URDF and launch file for independent use
 
@@ -40,7 +38,7 @@ These can be modified in `include/lc3_hw_interface/lc3_hardware_interface.hpp` i
 ## Build
 
 ```bash
-cd ~/ros2_yeray
+cd ~/ros2_ws
 colcon build --packages-select lc3_hw_interface
 source install/setup.bash
 ```
@@ -81,7 +79,7 @@ ros2 topic pub --once /column_position_controller/commands std_msgs/msg/Float64M
 ros2 topic echo /joint_states
 ```
 
-### Integration with Your Robot
+### Integration with Robot
 
 Add to your robot's URDF/xacro:
 
@@ -98,7 +96,7 @@ Add to your robot's URDF/xacro:
   </joint>
 </ros2_control>
 ```
-
+A link for the column in the robot URDF should be defined as well.
 ## Files
 
 - `urdf/lc3_column.urdf.xacro` - Robot description with LC3 column
@@ -112,7 +110,6 @@ Add to your robot's URDF/xacro:
 - The column automatically retracts to position 0 on shutdown (Ctrl+C)
 - Position limits enforced: 0.0 m (retracted) to 0.9 m (extended)
 - Heartbeat mechanism ensures continuous communication
-- Send-only-on-change reduces unnecessary Modbus traffic
 
 ## License
 
