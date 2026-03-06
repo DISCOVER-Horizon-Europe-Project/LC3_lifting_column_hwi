@@ -9,15 +9,13 @@ This launch file:
 4. Spawns the column position controller
 """
 
-import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
@@ -32,6 +30,12 @@ def generate_launch_description():
         'simulation',
         default_value='false',
         description='Run in Gazebo simulation mode'
+    )
+
+    use_rviz_arg = DeclareLaunchArgument(
+        'use_rviz',
+        default_value='true',
+        description='Launch RViz with the package configuration file'
     )
 
     # Get URDF via xacro
@@ -58,6 +62,10 @@ def generate_launch_description():
         [FindPackageShare('lc3_hw_interface'), 'config', 'lc3_controllers.yaml']
     )
 
+    rviz_config = PathJoinSubstitution(
+        [FindPackageShare('lc3_hw_interface'), 'config', 'lc3_column.rviz']
+    )
+
     # Controller manager node
     control_node = Node(
         package='controller_manager',
@@ -75,6 +83,14 @@ def generate_launch_description():
         executable='robot_state_publisher',
         output='both',
         parameters=[robot_description],
+    )
+
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        output='both',
+        arguments=['-d', rviz_config],
+        condition=IfCondition(LaunchConfiguration('use_rviz')),
     )
 
     # Joint state broadcaster spawner
@@ -102,8 +118,10 @@ def generate_launch_description():
     nodes = [
         use_mock_hardware_arg,
         simulation_arg,
+        use_rviz_arg,
         control_node,
         robot_state_pub_node,
+        rviz_node,
         joint_state_broadcaster_spawner,
         delay_column_controller_spawner,
     ]
