@@ -13,6 +13,8 @@ This package provides a ros2_control hardware interface for controlling LC3 line
 - Position and velocity feedback
 - Automatic retraction on shutdown
 - Standalone URDF and launch file for independent use
+- Joint trajectory controller with trajectory interpolation
+- Joint limits enforced (0.0 to 0.9 meters)
 
 ## Dependencies
 
@@ -60,17 +62,50 @@ ros2 launch lc3_hw_interface lc3_column.launch.py use_mock_hardware:=true
 
 ### Control the Column
 
-Send position commands (values in meters, range: 0.0 to 0.9):
+Send position commands using trajectory actions or topics:
 
+**Using action interface (recommended):**
 ```bash
 # Extend to 10 cm
-ros2 topic pub --once /column_position_controller/commands std_msgs/msg/Float64MultiArray "data: [0.1]"
+ros2 action send_goal /column_position_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
+  trajectory: {
+    joint_names: [column_joint],
+    points: [
+      { positions: [0.1], time_from_start: { sec: 2 } }
+    ]
+  }
+}"
 
 # Retract to 0
-ros2 topic pub --once /column_position_controller/commands std_msgs/msg/Float64MultiArray "data: [0.0]"
+ros2 action send_goal /column_position_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
+  trajectory: {
+    joint_names: [column_joint],
+    points: [
+      { positions: [0.0], time_from_start: { sec: 2 } }
+    ]
+  }
+}"
 
 # Extend to maximum (90 cm)
-ros2 topic pub --once /column_position_controller/commands std_msgs/msg/Float64MultiArray "data: [0.9]"
+ros2 action send_goal /column_position_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
+  trajectory: {
+    joint_names: [column_joint],
+    points: [
+      { positions: [0.9], time_from_start: { sec: 5 } }
+    ]
+  }
+}"
+```
+
+**Using topic interface (quick commands):**
+```bash
+# Single position command
+ros2 topic pub /column_position_controller/joint_trajectory trajectory_msgs/msg/JointTrajectory "{
+  joint_names: [column_joint],
+  points: [
+    { positions: [0.1], time_from_start: { sec: 2 } }
+  ]
+}" --once
 ```
 
 ### Monitor Joint States
