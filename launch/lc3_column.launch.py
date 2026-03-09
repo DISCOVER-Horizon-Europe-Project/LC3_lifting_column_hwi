@@ -7,10 +7,12 @@ This launch file:
 2. Starts the ros2_control controller manager
 3. Spawns the joint state broadcaster
 4. Spawns the column position controller
+5. Launches RViz for visualization
 """
 
+import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
@@ -18,26 +20,12 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
-def generate_launch_description():
-    # Declare arguments
-    use_mock_hardware_arg = DeclareLaunchArgument(
-        'use_mock_hardware',
-        default_value='false',
-        description='Use mock hardware (GenericSystem) instead of real LC3 hardware'
-    )
+def launch_setup(context, *args, **kwargs):
+    """Setup launch based on context parameters."""
     
-    simulation_arg = DeclareLaunchArgument(
-        'simulation',
-        default_value='false',
-        description='Run in Gazebo simulation mode'
-    )
-
-    use_rviz_arg = DeclareLaunchArgument(
-        'use_rviz',
-        default_value='true',
-        description='Launch RViz with the package configuration file'
-    )
-
+    # Get package share directory
+    pkg_share = FindPackageShare('lc3_hw_interface').perform(context)
+    
     # Get URDF via xacro
     robot_description_content = Command(
         [
@@ -50,21 +38,21 @@ def generate_launch_description():
             'use_mock_hardware:=',
             LaunchConfiguration('use_mock_hardware'),
             ' ',
-            'simulation:=',
-            LaunchConfiguration('simulation'),
+            'simulation:=false',  # Always false - only use launch simulation param for controller selection
         ]
     )
     
     robot_description = {'robot_description': robot_description_content}
 
-    # Controller configuration
-    robot_controllers = PathJoinSubstitution(
-        [FindPackageShare('lc3_hw_interface'), 'config', 'lc3_controllers.yaml']
-    )
+    # Controller configuration - select based on simulation parameter
+    simulation = context.launch_configurations.get('simulation', 'false')
+    
+    if simulation == 'true':
+        robot_controllers = os.path.join(pkg_share, 'config', 'lc3_controllers_jtc.yaml')
+    else:
+        robot_controllers = os.path.join(pkg_share, 'config', 'lc3_controllers_forward.yaml')
 
-    rviz_config = PathJoinSubstitution(
-        [FindPackageShare('lc3_hw_interface'), 'config', 'lc3_column.rviz']
-    )
+    rviz_config = os.path.join(pkg_share, 'config', 'lc3_column.rviz')
 
     # Controller manager node
     control_node = Node(
@@ -116,9 +104,6 @@ def generate_launch_description():
     )
 
     nodes = [
-        use_mock_hardware_arg,
-        simulation_arg,
-        use_rviz_arg,
         control_node,
         robot_state_pub_node,
         rviz_node,
@@ -126,4 +111,34 @@ def generate_launch_description():
         delay_column_controller_spawner,
     ]
 
-    return LaunchDescription(nodes)
+    return nodes
+
+
+def generate_launch_description():
+    # Declare arguments
+    use_mock_hardware_arg = DeclareLaunchArgument(
+        'use_mock_hardware',
+        default_value='false',
+        description='Use mock hardware (GenericSystem) instead of real LC3 hardware'
+    )
+    
+    simulation_arg = DeclareLaunchArgument(
+        'simulation',
+        default_value='false',
+        description='Run in simulation mode (uses JointTrajectoryController); default uses ForwardCommandController for real hardware'
+    )
+
+    use_rviz_arg = DeclareLaunchArgument(
+        'use_rviz',
+        default_value='true',
+        description='Launch RViz with the package configuration file'
+    )
+
+    ld = LaunchDescription([
+        use_mock_hardware_arg,
+        simulation_arg,
+        use_rviz_arg,
+        OpaqueFunction(function=launch_setup),
+    ])
+    
+    return ld

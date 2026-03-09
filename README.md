@@ -60,13 +60,49 @@ ros2 launch lc3_hw_interface lc3_column.launch.py
 ros2 launch lc3_hw_interface lc3_column.launch.py use_mock_hardware:=true
 ```
 
+**Controller Selection:**
+
+By default, the `ForwardCommandController` is used (recommended for real hardware). For simulation/testing mode, set `simulation:=true` to use `JointTrajectoryController`:
+
+```bash
+# Default: ForwardCommandController (real hardware)
+ros2 launch lc3_hw_interface lc3_column.launch.py
+
+# Simulation mode: JointTrajectoryController with mock hardware
+ros2 launch lc3_hw_interface lc3_column.launch.py simulation:=true use_mock_hardware:=true
+```
+
+**Available launch parameters:**
+- `use_mock_hardware`: Use GenericSystem mock instead of real hardware (default: false)
+- `simulation`: Use JointTrajectoryController for simulation/testing (default: false, uses ForwardCommandController)
+- `use_rviz`: Launch RViz visualization (default: true)
+
 ### Control the Column
+
+**Default mode (ForwardCommandController - real hardware):**
+
+Send position commands directly via topic:
+
+```bash
+# Extend to 10 cm
+ros2 topic pub --once /column_position_controller/commands std_msgs/msg/Float64MultiArray "data: [0.1]"
+
+# Retract to 0
+ros2 topic pub --once /column_position_controller/commands std_msgs/msg/Float64MultiArray "data: [0.0]"
+
+# Extend to maximum (90 cm)
+ros2 topic pub --once /column_position_controller/commands std_msgs/msg/Float64MultiArray "data: [0.9]"
+```
+
+![column_HWI](column_HWI.gif)
+
+**Simulation mode (JointTrajectoryController - use `simulation:=true`):**
 
 Send position commands using trajectory actions or topics:
 
 **Using action interface (recommended):**
 ```bash
-# Extend to 10 cm
+# Extend to 10 cm with 2 second trajectory
 ros2 action send_goal /column_position_controller/follow_joint_trajectory control_msgs/action/FollowJointTrajectory "{
   trajectory: {
     joint_names: [column_joint],
