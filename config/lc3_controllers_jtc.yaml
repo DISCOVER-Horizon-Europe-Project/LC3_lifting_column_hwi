@@ -18,7 +18,6 @@ column_position_controller:
     
     state_interfaces:
       - position
-      - velocity
     
     allow_partial_joints_goal: true
     

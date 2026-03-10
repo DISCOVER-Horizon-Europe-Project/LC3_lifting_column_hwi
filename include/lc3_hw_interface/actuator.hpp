@@ -13,7 +13,6 @@ namespace lc3_hw_interface
     int enc = 0;
     double cmd = 0;
     double pos = 0;
-    double vel = 0;
 
     Actuator() = default;
 

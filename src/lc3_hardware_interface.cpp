@@ -63,11 +63,11 @@ namespace lc3_hw_interface
         return hardware_interface::CallbackReturn::ERROR;
       }
 
-      if (joint.state_interfaces.size() != 2)
+      if (joint.state_interfaces.size() != 1)
       {
         RCLCPP_FATAL(
             rclcpp::get_logger("LC3HardwareInterface"),
-            "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
+            "Joint '%s' has %zu state interface. 1 expected.", joint.name.c_str(),
             joint.state_interfaces.size());
         return hardware_interface::CallbackReturn::ERROR;
       }
@@ -76,17 +76,8 @@ namespace lc3_hw_interface
       {
         RCLCPP_FATAL(
             rclcpp::get_logger("LC3HardwareInterface"),
-            "Joint '%s' have '%s' as first state interface. '%s' expected.", joint.name.c_str(),
+            "Joint '%s' have '%s' as state interface. '%s' expected.", joint.name.c_str(),
             joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-        return hardware_interface::CallbackReturn::ERROR;
-      }
-
-      if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-      {
-        RCLCPP_FATAL(
-            rclcpp::get_logger("LC3HardwareInterface"),
-            "Joint '%s' have '%s' as second state interface. '%s' expected.", joint.name.c_str(),
-            joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
         return hardware_interface::CallbackReturn::ERROR;
       }
     }
@@ -102,8 +93,6 @@ namespace lc3_hw_interface
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         column_.name, hardware_interface::HW_IF_POSITION, &column_.pos));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        column_.name, hardware_interface::HW_IF_VELOCITY, &column_.vel));
 
     return state_interfaces;
   }
@@ -282,8 +271,8 @@ namespace lc3_hw_interface
     modbus_read_registers(modbus_ctx_, REG_FB_POSITION, 1, &position_fb);
     column_.pos = static_cast<float>(position_fb) / 10000.0f; // Convert back to meters 
     
-    modbus_read_registers(modbus_ctx_, REG_FB_SPEED, 1, &speed_fb);
-    column_.vel = static_cast<float>(speed_fb) / 0.005 ; //! Convert back to m/s not sure about the unit
+    // modbus_read_registers(modbus_ctx_, REG_FB_SPEED, 1, &speed_fb);
+    // column_.vel = static_cast<float>(speed_fb) / 0.005 ; //! Convert back to m/s not sure about the unit
 
     // Removed periodic logging - use 'ros2 topic echo' to monitor position if needed
 
