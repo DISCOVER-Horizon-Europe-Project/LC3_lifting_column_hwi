@@ -41,6 +41,7 @@ These can be modified in `include/lc3_hw_interface/lc3_hardware_interface.hpp` i
 ## Build
 
 ```bash
+mkdir ~/ros2_ws
 cd ~/ros2_ws
 colcon build --packages-select lc3_hw_interface
 source install/setup.bash
