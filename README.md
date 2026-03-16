@@ -13,7 +13,8 @@ This package provides a ros2_control hardware interface for controlling LC3 line
 - Position feedback
 - Automatic retraction on shutdown
 - Standalone URDF and launch file for independent use
-- Joint trajectory controller with trajectory interpolation
+- Joint trajectory controller with trajectory interpolation in simulation
+- Forward Command Controller for real hardware.
 - Joint limits enforced (0.0 to 0.9 meters)
 
 ## Dependencies
