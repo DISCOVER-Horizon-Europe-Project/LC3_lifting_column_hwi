@@ -10,7 +10,7 @@ This package provides a ros2_control hardware interface for controlling LC3 line
 
 - Full ros2_control SystemInterface implementation
 - Modbus TCP communication
-- Position
+- Position feedback
 - Automatic retraction on shutdown
 - Standalone URDF and launch file for independent use
 - Joint trajectory controller with trajectory interpolation
